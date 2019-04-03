@@ -1,0 +1,66 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls %}
+{% load staticfiles %}
+{% block extrahead %}
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.min.js"></script>
+    <script>
+        var randomColorGenerator = function () {
+            return '#' + (Math.random().toString(16) + '0000000').slice(2, 8);
+        };
+        var options = {
+            responsive: true,
+            maintainAspectRatio: true,
+            legend: {
+                position: 'left'
+            },
+            title: {
+                display: true
+            },
+            animation: {
+                animateScale: true,
+                animateRotate: true
+            }
+        };
+        window.onload = function () {
+            var ctx = document.getElementById("remarks-chart");
+            {% regroup cl.queryset|dictsort:"Academic" by get_Academic_display as Academic_list %}
+            var lineChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: [{% for Academic in Academic_list %}'{{ Academic.grouper }}',{% endfor %}],
+                    datasets: [{
+                        data: [{% for Academic in Academic_list %}'{{ Academic.list|length }}',{% endfor %}],
+                        backgroundColor: [{% for Academic` in Academic_list %}randomColorGenerator(),{% endfor %}]
+                    }]
+                }, options: options
+            });
+            ctx = document.getElementById("Academic-chart");
+            {% regroup cl.queryset|dictsort:"remarks" by remarks as remarks_list %}
+            lineChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: [{% for grade in remarks_list %}'{{ grade.grouper }}',{% endfor %}],
+                    datasets: [{
+                        data: [{% for grade in remarks_list %}'{{ grade.list|length }}',{% endfor %}],
+                        backgroundColor: [{% for remarks in remarks_list %}randomColorGenerator(),{% endfor %}]
+                    }]
+                }, options: options
+            });
+        }
+    </script>
+{% endblock %}
+{% block content %}
+    <h1> #Graphs : </h1>
+    <hr>
+    <div class="row">
+        <div class="col-sm-4">
+            <canvas id="remarks-chart" style="width: 100px !important;"></canvas>
+        </div>
+        <div class="col-sm-5">
+            <canvas id="Academic-chart" style="width: 100px !important;"></canvas>
+        </div>
+    </div>
+    {{ block.super }}
+{% endblock %}
